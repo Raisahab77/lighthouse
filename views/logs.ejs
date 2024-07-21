@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VRX-Lighthouse</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+        integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/prism.min.js"></script> -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <!-- <link rel="stylesheet" href="/output.css"> -->
+      
+    <style>
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out, padding 0.5s ease-out;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+
+        .collapsible-content.expanded {
+            max-height: 1000px;
+            /* Adjust this value based on your content */
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+        }
+
+        .arrow {
+            width: 10px;
+            height: 2px;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .arrow-1 {
+            transform: rotate(30deg)
+        }
+
+        .arrow-2 {
+            transform: rotate(-30deg)
+        }
+
+        .reversed .arrow-1 {
+            transform: rotate(-30deg)
+        }
+
+        .reversed .arrow-2 {
+            transform: rotate(30deg)
+        }
+        .table-wrapper {
+            overflow-x: auto;
+        }
+        table {
+            table-layout: fixed;
+        }
+    </style>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class'
+                
+        }
+    </script>
+</head>
+
+<body>
+    <div class="bg-gray-100 dark:bg-[#212122] dark:text-white min-h-screen overflow-y-auto">
+        <div class="w-full max-h-screen">
+            <div class="container mx-auto p-4 h-full w-full">
+                <div class="rounded-lg shadow-md p-4 dark:bg-[#2b2b2b] h-full max-w-full">
+                    <div class="flex justify-between items-center mb-4">
+                        <h1 class="text-xl font-semibold text-blue-500">VRX-Lighthouse</h1>
+                        <form action="/logs" method="GET" class="flex space-x-2">
+                            <input type="text" name="search" placeholder="Search logs..." value="<%= search %>"
+                                class="px-3 py-1 border rounded dark:bg-[#212122]">
+                            <select name="filter" class="px-3 py-1 border rounded dark:bg-[#212122]">
+                                <option value="all" <%=filter==='all' ? 'selected' : '' %>>All Levels</option>
+                                <option value="info" <%=filter==='info' ? 'selected' : '' %>>Info</option>
+                                <option value="error" <%=filter==='error' ? 'selected' : '' %>>Error</option>
+                                <option value="warn" <%=filter==='warn' ? 'selected' : '' %>>Warn</option>
+                            </select>
+                            <button type="submit" class="px-3 py-1 bg-blue-500 text-white rounded">Search</button>
+                            <div class="flex items-center">
+                                <span class="material-symbols-outlined cursor-pointer" id="sun-icon" onclick="toggleTheme()">
+                                    light_mode
+                                </span>
+                                <span class="material-symbols-outlined cursor-pointer" id="moon-icon" onclick="toggleTheme()">
+                                    dark_mode
+                                </span>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="table-wrapper w-full">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="text-left text-gray-600 dark:text-gray-100">
+                                    <th class="py-2">Method</th>
+                                    <th class="py-2 ">Path</th>
+                                    <th class="py-2">Message</th>
+                                    <th class="py-2">Status</th>
+                                    <th class="py-2">Timestamp</th>
+                                    <th class="py-2">Action</th>
+        
+                            </thead>
+                            <tbody>
+                                <% logs.forEach((log, index)=> { %>
+                                    <tr class="border-t cursor-pointer hover:bg-gray-50 dark:hover:bg-[#212122]"
+                                        id="row-<%= index %>" onclick="toggleDetails(<%= index %>)">
+                                        <% if (log?.request?.method && log.request.method.toLowerCase()=='get' ) { %>
+                                            <td class="py-2"><span
+                                                    class="bg-blue-100 text-blue-800 border border-blue-800 px-2 py-1 rounded text-xs">
+                                                    <%= log?.request?.method %>
+                                                </span></td>
+                                            <% } else if (log?.request?.method && log.request.method.toLowerCase()=='post' ) { %>
+                                                <td class="py-2"><span
+                                                        class="bg-green-100 text-green-800 border border-green-800 px-2 py-1 rounded text-xs">
+                                                        <%= log?.request?.method %>
+                                                    </span></td>
+                                                <% } else if (log?.request?.method && log.request.method.toLowerCase()=='put' ) { %>
+                                                    <td class="py-2"><span
+                                                            class="bg-green-100 text-orange-800 border border-orange-800 px-2 py-1 rounded text-xs">
+                                                            <%= log?.request?.method %>
+                                                        </span></td>
+                                                    <% } else if (log?.request?.method && log.request.method.toLowerCase()=='delete'
+                                                        ) { %>
+                                                        <td class="py-2"><span
+                                                                class="bg-red-100 text-red-800 border border-red-800 px-2 py-1 rounded text-xs">
+                                                                <%= log?.request?.method %>
+                                                            </span></td>
+                                                        <% } else { %>
+                                                            <td class="py-2"><span
+                                                                    class="bg-gray-100 text-gray-800 border border-gray-800 px-2 py-1 rounded text-xs">
+                                                                    <%= log?.request?.method %>
+                                                                </span></td>
+                                                            <% } %>
+
+                                                                <td class="py-2">
+                                                                    <%= log?.request?.url %>
+                                                                </td>
+                                                                <td class="py-2">
+                                                                    <%= log?.message %>
+                                                                </td>
+                                                                <td class="py-2">
+                                                                    <% if (log.status>= 500) { %>
+                                                                        <span
+                                                                            class="bg-red-100 text-red-800 border border-red-800 px-2 py-1 rounded text-xs">
+                                                                            <%= log.status %>
+                                                                        </span>
+                                                                        <% } else if (log.status>= 400) { %>
+                                                                            <span
+                                                                                class="bg-yellow-100 text-yellow-500 border border-yellow-500 px-2 py-1 rounded text-xs">
+                                                                                <%= log.status %>
+                                                                            </span>
+                                                                            <% } else if (log.status>= 300) { %>
+                                                                                <span
+                                                                                    class="bg-blue-100 text-blue-800 border border-blue-800 px-2 py-1 rounded text-xs">
+                                                                                    <%= log.status %>
+                                                                                </span>
+                                                                                <% } else { %>
+                                                                                    <span
+                                                                                        class="bg-green-100 text-green-800 border border-green-800 px-2 py-1 rounded text-xs">
+                                                                                        <%= log.status %>
+                                                                                    </span>
+                                                                                    <% } %>
+                                                                </td>
+                                                                <td class="py-2">
+                                                                    <%= new Date(log.timestamp).toLocaleString() %>
+                                                                </td>
+
+                                                                <td>
+                                                                    <div class="flex">
+                                                                        <div class="bg-blue-500 arrow arrow-1"></div>
+                                                                        <div class="bg-blue-500 arrow arrow-2"></div>
+                                                                    </div>
+                                                                </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="6" class="p-0">
+                                            <div id="details-<%= index %>" class="collapsible-content">
+                                                <div class="p-4">
+                                                    <h3 class="font-semibold mb-2">Request Details:</h3>
+                                                    <div class="p-2">
+                                                        <pre class="bg-gray-100 text-black dark:bg-[#212122] dark:text-white p-4 overflow-x-auto"><%= JSON.stringify(log.request, null, 2) %></pre>
+                                                    </div>
+                                                    <h3 class="font-semibold mt-4 mb-2">Response Details:</h3>
+                                                    <div class="p-2">
+                                                        <pre class="bg-gray-100 text-black dark:bg-[#212122] dark:text-white p-4 overflow-x-auto"><%= JSON.stringify(log.response, null, 2) %></pre>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <% }); %>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="mt-4 flex justify-between items-center">
+                        <% if (page > 1) { %>
+                            <a href="<%= currentUrl.replace(`page=${page}`, `page=${page-1}`) %>"
+                                class="px-3 py-1 bg-blue-500 text-white rounded">Previous</a>
+                        <% } else { %>
+                            <span></span>
+                        <% } %>
+
+                        <span>Page <%= page %> of <%= totalPages %></span>
+
+                        <% if (page < totalPages) { %>
+                            <a href="<%= currentUrl.includes('page=') ? currentUrl.replace(`page=${page}`, `page=${page+1}`) : currentUrl + (currentUrl.includes('?') ? '&' : '?') + `page=${page+1}` %>"
+                                class="px-3 py-1 bg-blue-500 text-white rounded">Next</a>
+                        <% } else { %>
+                            <span></span>
+                        <% } %>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    
+
+    <!-- <script>
+        function toggleTheme() {
+            document.body.classList.toggle('dark');
+        }
+    </script> -->
+
+    <script src="/script.js"></script>
+</body>
+
+</html>
